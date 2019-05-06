@@ -7,15 +7,15 @@ this purposes.
 > This package is still on progress. Subscribe to the repository to be aware of
 > updates and follow future stable versions
 
-## POV
+## POC
 
-This package is part of a Prove of Concept with the main goal of working with
+This package is part of a Proof of Concept with the main goal of working with
 Promises in Symfony. Before that, let's check where are we. Let's start from the
 beginning and talk about what Symfony is made for, the regular usage is usually
 used for and how we can really improve **SO MUCH** the performance of our
 applications.
 
-> As a disclaimer, this POV is focused on APIs, so we are not adding here any
+> As a disclaimer, this POC is focused on APIs, so we are not adding here any
 > Twig support. Once the package becomes tested and a little bit stable, then we
 > will add this feature.
 
