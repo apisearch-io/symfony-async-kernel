@@ -11,7 +11,7 @@
     "require": {
         "php": ">=7.1",
 
-        "symfony/http-kernel": "^4.0",
+        "symfony/symfony": "feature/kernel-async",
         "react/promise": "*"
     },
     "require-dev": {
@@ -22,6 +22,10 @@
         "mmoreram/symfony-bundle-dependencies": "^2.0.0",
         "mmoreram/base-bundle": "^1.0.10",
         "clue/block-react": "*"
+    },
+    "repositories": {
+        "type": "vcs",
+        "url": "https://github.com/mmoreram/symfony"
     },
     "autoload": {
         "psr-4": {
