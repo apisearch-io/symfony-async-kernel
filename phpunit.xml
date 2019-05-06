@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit backupGlobals="false"
+         backupStaticAttributes="false"
+         colors="true"
+         convertErrorsToExceptions="false"
+         convertNoticesToExceptions="false"
+         convertWarningsToExceptions="false"
+         processIsolation="false"
+         stopOnFailure="true"
+         bootstrap="vendor/autoload.php"
+>
+    <testsuites>
+        <testsuite name="server">
+            <directory>./Tests</directory>
+        </testsuite>
+        <testsuite name="plugins">
+            <directory>./Plugin/*/Tests</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="APISEARCH_GOD_TOKEN" value="0e4d75ba-c640-44c1-a745-06ee51db4e93" force="true" />
+        <env name="APISEARCH_READONLY_TOKEN" value="410806ed-f2c2-8d22-96ea-7fb68026df34" force="true" />
+        <env name="APISEARCH_PING_TOKEN" value="6326d504-0a5f-f1ae-7344-8e70b75fcde9" force="true" />
+        <env name="APISEARCH_ENABLED_PLUGINS" value="redis_storage" force="true" />
+
+        <env name="ELASTICSEARCH_HOST" value="apisearch.elasticsearch.6.6" force="true" />
+        <env name="ELASTICSEARCH_PORT" value="9200" force="true" />
+
+        <env name="REDIS_QUEUE_HOST" value="apisearch.redis" force="true" />
+        <env name="REDIS_QUEUE_PORT" value="6379" force="true" />
+
+        <env name="RABBITMQ_QUEUE_HOST" value="apisearch.rabbitmq" force="true" />
+        <env name="RABBITMQ_QUEUE_PORT" value="5672" force="true" />
+        <env name="RABBITMQ_QUEUE_USER" value="guest" force="true" />
+        <env name="RABBITMQ_QUEUE_PASSWORD" value="guest" force="true" />
+        <env name="RABBITMQ_QUEUE_SECONDS_TO_WAIT_ON_BUSY" value="1" force="true" />
+
+        <env name="REDIS_STORAGE_HOST" value="apisearch.redis" force="true" />
+        <env name="REDIS_STORAGE_PORT" value="6379" force="true" />
+
+        <env name="REDIS_SECURITY_HOST" value="apisearch.redis" force="true" />
+        <env name="REDIS_SECURITY_PORT" value="6379" force="true" />
+
+        <env name="REDIS_ELK_HOST" value="apisearch.redis" force="true" />
+        <env name="REDIS_ELK_PORT" value="6379" force="true" />
+
+        <env name="REDIS_METADATA_FIELDS_HOST" value="apisearch.redis" force="true" />
+        <env name="REDIS_METADATA_FIELDS_PORT" value="6379" force="true" />
+    </php>
+</phpunit>
