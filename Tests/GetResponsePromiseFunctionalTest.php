@@ -23,9 +23,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Class AsyncFunctionalTest.
+ * Class GetResponsePromiseFunctionalTest.
  */
-class AsyncFunctionalTest extends AsyncKernelFunctionalTest
+class GetResponsePromiseFunctionalTest extends AsyncKernelFunctionalTest
 {
     /**
      * Decorate configuration.
@@ -43,12 +43,12 @@ class AsyncFunctionalTest extends AsyncKernelFunctionalTest
                 [
                     'name' => 'kernel.event_listener',
                     'event' => 'kernel.async_request',
-                    'method' => 'handleGetResponsePromiseNothing',
+                    'method' => 'handleGetResponsePromiseA',
                 ],
                 [
                     'name' => 'kernel.event_listener',
                     'event' => 'kernel.async_exception',
-                    'method' => 'handleGetExceptionNothing',
+                    'method' => 'handleGetExceptionA',
                 ],
             ],
         ];
@@ -70,7 +70,7 @@ class AsyncFunctionalTest extends AsyncKernelFunctionalTest
             ]))
             ->then(function (Response $response) {
                 $this->assertEquals(
-                    'Y',
+                    'A',
                     $response->getContent()
                 );
             });
@@ -82,7 +82,7 @@ class AsyncFunctionalTest extends AsyncKernelFunctionalTest
             ]))
             ->then(null, function (Exception $exception) {
                 $this->assertEquals(
-                    'E2',
+                    'EXC',
                     $exception->getMessage()
                 );
             });

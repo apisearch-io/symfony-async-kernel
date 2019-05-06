@@ -72,18 +72,22 @@ abstract class AsyncKernelFunctionalTest extends BaseFunctionalTest
             [
                 '/value',
                 Controller::class.':getValue',
+                'value',
             ],
             [
                 '/promise',
                 Controller::class.':getPromise',
+                'promise',
             ],
             [
                 '/exception',
                 Controller::class.':throwException',
+                'exception',
             ],
             [
                 '/promise-exception',
                 Controller::class.':getPromiseException',
+                'promise-exception',
             ],
         ];
 
