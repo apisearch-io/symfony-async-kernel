@@ -35,34 +35,34 @@ performance, we mean about CPU consumption, Memory usage and Response times.
 Everything matters here, right? At least, everything should matter in terms of
 software economy.
 
-**Step 1** - Apache server receives a new request and sends it directly to the
+- **Step 1** - Apache server receives a new request and sends it directly to the
 app.php file.
-**Step 2** - Symfony kernel boots. That means that, in the better of the cases, the
+- **Step 2** - Symfony kernel boots. That means that, in the better of the cases, the
 container is cached properly. The Kernel is created *(once again)*, the 
 container configuration is loaded from this cache, and a new Request object is
 created with the data received from Apache.
-**Step 3** - The Kernel handles this Request, waiting for a Response.
-**Step 4** - Some framework magic (resolve controller, resolve dispatch some
+- **Step 3** - The Kernel handles this Request, waiting for a Response.
+- **Step 4** - Some framework magic (resolve controller, resolve dispatch some
 events...)
-**Step 5** - We call the controller entry point. Remember that we MUST return a
+- **Step 5** - We call the controller entry point. Remember that we MUST return a
 Response instance (remember that we don't use Views here, so we discard
 returning an array here. Anyway, would be the same).
-**Step 6** - We do our logic. For example, we call a repository to get an array of
+- **Step 6** - We do our logic. For example, we call a repository to get an array of
 values from Redis.
-**Step 7** - Redis returns an array of values, where the controller return a new
+- **Step 7** - Redis returns an array of values, where the controller return a new
 Response with these values, where the Kernel, after some extra event dispatches,
 return this Response to Apache, which return the response to the final client.
 
 This is one natural Request / Response workflow in one of our applications.
 Fast, isn't it? Let's check in terms of performance.
 
-**Step 1** - We must have Apache server installed. By adding Apache as a man in
+- **Step 1** - We must have Apache server installed. By adding Apache as a man in
 the middle, we spend some time. Even if it's **1ms**, we will see later that
 each single **1ms** can be so much important here.
-**Step 2** - Symfony kernel is booted every time. Once and again. Every single
+- **Step 2** - Symfony kernel is booted every time. Once and again. Every single
 request. Let's say... **15ms**? **20ms?** Something like that. Let's say
 **15ms** being SO optimists.
-**Step 7** - Imagine a Redis call as a representation of any external call. This
+- **Step 7** - Imagine a Redis call as a representation of any external call. This
 could be a redis one (fast one), or an HTTP one, slow one. This action will
 last the time this operation lasts. Let's say **50ms**.
 
@@ -135,18 +135,18 @@ with some non-blocking clients like the HTTP one or a Redis one.
 
 This is the workflow.
 
-**Step 1** - ReactPHP receives it's own Request, and creates a Symfony request.
-**Step 2** - The Kernel handles this Request, waiting for a Response.
-**Step 3** - Some framework magic (resolve controller, resolve dispatch some
+- **Step 1** - ReactPHP receives it's own Request, and creates a Symfony request.
+- **Step 2** - The Kernel handles this Request, waiting for a Response.
+- **Step 3** - Some framework magic (resolve controller, resolve dispatch some
 events...)
-**Step 4** - We call the controller entry point. Remember that we MUST return a
+- **Step 4** - We call the controller entry point. Remember that we MUST return a
 Response instance.
-**Step 5** - We do our logic. For example, we call a repository to get an array
+- **Step 5** - We do our logic. For example, we call a repository to get an array
 of values from Redis.
-**Step 6** - Redis returns a **Promise** of values. This promise is returned to
+- **Step 6** - Redis returns a **Promise** of values. This promise is returned to
 the controller, and has to be resolved. Once is resolved, returns a Response to
 the Kernel.
-**Step 7** - The Kernel returns the Response to the ReactPHP server, which
+- **Step 7** - The Kernel returns the Response to the ReactPHP server, which
 creates a new promise with that Response.
 
 When checking performance, we see that the I/O, even if it's asynchronous, is
@@ -163,19 +163,19 @@ to the ReactPHP server.
 
 Let's check the workflow.
 
-**Step 1** - ReactPHP receives it's own Request, and creates a Symfony request.
-**Step 2** - The Kernel handles **asynchronously** this Request, waiting for a 
+- **Step 1** - ReactPHP receives it's own Request, and creates a Symfony request.
+- **Step 2** - The Kernel handles **asynchronously** this Request, waiting for a 
 Promise containing a Response.
-**Step 3** - Some framework magic (resolve controller, resolve dispatch some
+- **Step 3** - Some framework magic (resolve controller, resolve dispatch some
 events...)
-**Step 4** - We call the controller entry point. Now we can return a Promise
+- **Step 4** - We call the controller entry point. Now we can return a Promise
 instead of a Response instance.
-**Step 5** - We do our logic. For example, we call a repository to get an array
+- **Step 5** - We do our logic. For example, we call a repository to get an array
 of values from Redis.
-**Step 6** - Redis returns a Promise of values. This promise is returned to
+- **Step 6** - Redis returns a Promise of values. This promise is returned to
 the controller. No need to resolve anything. Returning the Promise to the
 Kernel.
-**Step 7** - The Kernel returns the Promise to the ReactPHP server. Directly.
+- **Step 7** - The Kernel returns the Promise to the ReactPHP server. Directly.
 
 And checking the performance? Easy. The response will still return in 54ms. We
 can improve this time by improving your networking interface or by adding some
