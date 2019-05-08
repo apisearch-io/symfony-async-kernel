@@ -1,5 +1,5 @@
 {
-    "name": "apisearch-io/async-http-kernel",
+    "name": "apisearch-io/symfony-async-http-kernel",
     "type": "library",
     "license": "MIT",
     "authors": [
