@@ -48,7 +48,7 @@ abstract class AsyncKernel extends Kernel
 
         $httpKernel = $this->getHttpKernel();
         if (!$httpKernel instanceof AsyncHttpKernel) {
-            throw new AsyncHttpKernelNeededException();
+            throw new AsyncHttpKernelNeededException('In order to use this AsyncKernel, you need to have the HttpAsyncKernel installed');
         }
 
         return $httpKernel->handleAsync(

@@ -109,14 +109,13 @@ class AsyncHttpKernel extends HttpKernel
 
         $request->headers->set('X-Php-Ob-Level', ob_get_level());
 
-        return $this->handleAsyncRaw(
-            $request,
-            $type
-        )
-            ->then(
-                function (Response $response) {
-                    return $response;
-                }, function (\Exception $e) use ($request, $type, $catch) {
+        return
+            $this->handleAsyncRaw(
+                $request,
+                $type
+            )
+            ->then(null,
+                function (\Exception $e) use ($request, $type, $catch) {
                     if ($e instanceof RequestExceptionInterface) {
                         $e = new BadRequestHttpException($e->getMessage(), $e);
                     }
@@ -128,7 +127,8 @@ class AsyncHttpKernel extends HttpKernel
                     }
 
                     return $this->handleExceptionPromise($e, $request, $type);
-                });
+                }
+            );
     }
 
     /**
@@ -167,40 +167,59 @@ class AsyncHttpKernel extends HttpKernel
             ->asyncDispatch(AsyncKernelEvents::ASYNC_REQUEST, $event)
             ->then(function (PromiseEvent $event) use ($request, $type) {
                 if ($event->hasPromise()) {
-                    return $this->filterResponsePromise(
-                        $event->getPromise(),
-                        $request,
-                        $type
-                    );
+                    return $event
+                        ->getPromise()
+                        ->then(function ($response) use ($request, $type) {
+                            return $response instanceof Response
+                                ? $this->filterResponsePromise(
+                                    new FulfilledPromise($response),
+                                    $request,
+                                    $type
+                                )
+                                : $this->callAsyncController($request, $type);
+                        });
                 }
 
-                if (false === $controller = $this->resolver->getController($request)) {
-                    throw new NotFoundHttpException(
-                        sprintf('Unable to find the controller for path "%s". The route is wrongly configured.', $request->getPathInfo())
-                    );
-                }
-
-                $event = new FilterControllerEvent($this, $controller, $request, $type);
-                $this->dispatcher->dispatch(KernelEvents::CONTROLLER, $event);
-                $controller = $event->getController();
-
-                // controller arguments
-                $arguments = $this->argumentResolver->getArguments($request, $controller);
-
-                $event = new FilterControllerArgumentsEvent($this, $controller, $arguments, $request, $type);
-                $this->dispatcher->dispatch(KernelEvents::CONTROLLER_ARGUMENTS, $event);
-                $controller = $event->getController();
-                $arguments = $event->getArguments();
-
-                /**
-                 * Call controller.
-                 *
-                 * @var PromiseInterface
-                 */
-                $promise = $controller(...$arguments);
-
-                return $this->filterResponsePromise($promise, $request, $type);
+                return $this->callAsyncController($request, $type);
             });
+    }
+
+    /**
+     * Call async controller.
+     *
+     * @param Request $request
+     * @param int     $type
+     *
+     * @return PromiseInterface
+     */
+    private function callAsyncController(Request $request, int $type): PromiseInterface
+    {
+        if (false === $controller = $this->resolver->getController($request)) {
+            throw new NotFoundHttpException(
+                sprintf('Unable to find the controller for path "%s". The route is wrongly configured.', $request->getPathInfo())
+            );
+        }
+
+        $event = new FilterControllerEvent($this, $controller, $request, $type);
+        $this->dispatcher->dispatch(KernelEvents::CONTROLLER, $event);
+        $controller = $event->getController();
+
+        // controller arguments
+        $arguments = $this->argumentResolver->getArguments($request, $controller);
+
+        $event = new FilterControllerArgumentsEvent($this, $controller, $arguments, $request, $type);
+        $this->dispatcher->dispatch(KernelEvents::CONTROLLER_ARGUMENTS, $event);
+        $controller = $event->getController();
+        $arguments = $event->getArguments();
+
+        /**
+         * Call controller.
+         *
+         * @var PromiseInterface
+         */
+        $promise = $controller(...$arguments);
+
+        return $this->filterResponsePromise($promise, $request, $type);
     }
 
     /**
@@ -221,12 +240,12 @@ class AsyncHttpKernel extends HttpKernel
         return $this
             ->dispatcher
             ->asyncDispatch(AsyncKernelEvents::ASYNC_RESPONSE, $event)
-            ->then(function (PromiseEvent $event) use ($request, $type) {
+            ->then(function (PromiseEvent $event) use ($request, $type, $promise) {
                 $this->finishRequestPromise($request, $type);
 
                 return $event->hasPromise()
                     ? $event->getPromise()
-                    : new FulfilledPromise();
+                    : $promise;
             });
     }
 
