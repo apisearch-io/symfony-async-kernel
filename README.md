@@ -7,6 +7,10 @@ this purposes.
 > This package is still on progress. Subscribe to the repository to be aware of
 > updates and follow future stable versions
 
+> IMPORTANT !!!  
+> **You can take a look at the first Symfony example on top of this package at
+> [Symfony and ReactPHP Demo](https://symfony-devs.slack.com/messages/CJ65UPJ8J)**
+
 ## POC
 
 This package is part of a Proof of Concept with the main goal of working with
