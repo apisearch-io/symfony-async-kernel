@@ -16,13 +16,15 @@ declare(strict_types=1);
 namespace Symfony\Component\HttpKernel;
 
 use React\Promise\PromiseInterface;
+use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AsyncHttpKernelNeededException;
 
 /**
  * Class AsyncKernel.
  */
-abstract class AsyncKernel extends Kernel
+abstract class AsyncKernel extends Kernel implements CompilerPassInterface
 {
     /**
      * Handles a Request to convert it to a Response.
@@ -56,5 +58,19 @@ abstract class AsyncKernel extends Kernel
             $type,
             $catch
         );
+    }
+
+    /**
+     * You can modify the container here before it is dumped to PHP code.
+     */
+    public function process(ContainerBuilder $container)
+    {
+        $container
+            ->getDefinition('event_dispatcher')
+            ->setClass(AsyncEventDispatcher::class);
+
+        $container
+            ->getDefinition('http_kernel')
+            ->setClass(AsyncHttpKernel::class);
     }
 }
