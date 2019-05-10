@@ -15,9 +15,11 @@ declare(strict_types=1);
 
 namespace Symfony\Component\HttpKernel;
 
+use React\EventLoop\LoopInterface;
 use React\Promise\PromiseInterface;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\AsyncHttpKernelNeededException;
 
@@ -72,5 +74,12 @@ abstract class AsyncKernel extends Kernel implements CompilerPassInterface
         $container
             ->getDefinition('http_kernel')
             ->setClass(AsyncHttpKernel::class);
+
+        $loop = new Definition(LoopInterface::class);
+        $loop->setSynthetic(true);
+        
+        $container->setDefinition('reactphp.event_loop', $loop);
+        $container->setAlias(LoopInterface::class, 'reactphp.event_loop');
+
     }
 }
