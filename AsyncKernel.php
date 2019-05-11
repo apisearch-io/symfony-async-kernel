@@ -75,10 +75,12 @@ abstract class AsyncKernel extends Kernel implements CompilerPassInterface
             ->getDefinition('http_kernel')
             ->setClass(AsyncHttpKernel::class);
 
-        $loop = new Definition(LoopInterface::class);
-        $loop->setSynthetic(true);
+        if (!$container->has('reactphp.event_loop')) {
+            $loop = new Definition(LoopInterface::class);
+            $loop->setSynthetic(true);
+            $container->setDefinition('reactphp.event_loop', $loop);
+        }
 
-        $container->setDefinition('reactphp.event_loop', $loop);
         $container->setAlias(LoopInterface::class, 'reactphp.event_loop');
     }
 }
