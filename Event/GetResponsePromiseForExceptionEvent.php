@@ -15,9 +15,9 @@ declare(strict_types=1);
 
 namespace Symfony\Component\HttpKernel\Event;
 
-use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Throwable;
 
 /**
  * Class GetResponsePromiseForExceptionEvent.
@@ -27,7 +27,7 @@ class GetResponsePromiseForExceptionEvent extends GetResponsePromiseEvent
     /**
      * The exception object.
      *
-     * @var \Exception
+     * @var Throwable
      */
     private $exception;
 
@@ -42,13 +42,13 @@ class GetResponsePromiseForExceptionEvent extends GetResponsePromiseEvent
      * @param HttpKernelInterface $kernel
      * @param Request             $request
      * @param int                 $requestType
-     * @param Exception           $exception
+     * @param Throwable           $exception
      */
     public function __construct(
         HttpKernelInterface $kernel,
         Request $request,
         int $requestType,
-        Exception $exception
+        Throwable $exception
     ) {
         parent::__construct($kernel, $request, $requestType);
 
@@ -58,9 +58,9 @@ class GetResponsePromiseForExceptionEvent extends GetResponsePromiseEvent
     /**
      * Returns the thrown exception.
      *
-     * @return \Exception The thrown exception
+     * @return Throwable
      */
-    public function getException()
+    public function getException(): Throwable
     {
         return $this->exception;
     }
@@ -70,9 +70,9 @@ class GetResponsePromiseForExceptionEvent extends GetResponsePromiseEvent
      *
      * This exception will be thrown if no response is set in the event.
      *
-     * @param \Exception $exception The thrown exception
+     * @param Throwable $exception
      */
-    public function setException(\Exception $exception)
+    public function setException(Throwable $exception)
     {
         $this->exception = $exception;
     }

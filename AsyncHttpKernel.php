@@ -15,7 +15,6 @@ declare(strict_types=1);
 
 namespace Symfony\Component\HttpKernel;
 
-use Exception;
 use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
 use React\Promise\RejectedPromise;
@@ -38,6 +37,7 @@ use Symfony\Component\HttpKernel\Exception\AsyncEventDispatcherNeededException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Throwable;
 
 /**
  * Class AsyncHttpKernel.
@@ -115,18 +115,18 @@ class AsyncHttpKernel extends HttpKernel
                 $type
             )
             ->then(null,
-                function (\Exception $e) use ($request, $type, $catch) {
-                    if ($e instanceof RequestExceptionInterface) {
-                        $e = new BadRequestHttpException($e->getMessage(), $e);
+                function (Throwable $exception) use ($request, $type, $catch) {
+                    if ($exception instanceof RequestExceptionInterface) {
+                        $exception = new BadRequestHttpException($exception->getMessage(), $exception);
                     }
 
                     if (false === $catch) {
                         $this->finishRequestPromise($request, $type);
 
-                        throw $e;
+                        throw $exception;
                     }
 
-                    return $this->handleExceptionPromise($e, $request, $type);
+                    return $this->handleExceptionPromise($exception, $request, $type);
                 }
             );
     }
@@ -269,20 +269,20 @@ class AsyncHttpKernel extends HttpKernel
     /**
      * Handles an exception by trying to convert it to a Response.
      *
-     * @param \Exception $e       An \Exception instance
-     * @param Request    $request A Request instance
-     * @param int        $type    The type of the request (one of HttpKernelInterface::MASTER_REQUEST or HttpKernelInterface::SUB_REQUEST)
+     * @param Throwable $exception
+     * @param Request   $request
+     * @param int       $type
      *
      * @return PromiseInterface
      *
-     * @throws \Exception
+     * @throws \Throwable
      */
     private function handleExceptionPromise(
-        Exception $e,
+        Throwable $exception,
         Request $request,
         int $type
     ): PromiseInterface {
-        $event = new GetResponsePromiseForExceptionEvent($this, $request, $type, $e);
+        $event = new GetResponsePromiseForExceptionEvent($this, $request, $type, $exception);
         $promise = $this
             ->dispatcher
             ->asyncDispatch(AsyncKernelEvents::ASYNC_EXCEPTION, $event)

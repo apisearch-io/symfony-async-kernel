@@ -77,9 +77,8 @@ abstract class AsyncKernel extends Kernel implements CompilerPassInterface
 
         $loop = new Definition(LoopInterface::class);
         $loop->setSynthetic(true);
-        
+
         $container->setDefinition('reactphp.event_loop', $loop);
         $container->setAlias(LoopInterface::class, 'reactphp.event_loop');
-
     }
 }
