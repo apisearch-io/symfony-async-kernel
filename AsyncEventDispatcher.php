@@ -63,21 +63,14 @@ class AsyncEventDispatcher extends EventDispatcher
     ) {
         $promise = new FulfilledPromise();
         foreach ($listeners as $listener) {
-            if ($event->isPropagationStopped()) {
-                break;
-            }
-
-            $result = $listener($event, $eventName, $this);
-            if (!$result instanceof PromiseInterface) {
-                $result = new FulfilledPromise($result);
-            }
-
-            $promise = $promise->then(function () use ($result) {
-                return new FulfilledPromise(function (PromiseEvent $event) use ($result) {
-                    return $event->hasPromise()
-                        ? new FulfilledPromise()
-                        : $result;
-                });
+            $promise = $promise->then(function () use ($event, $eventName, $listener) {
+                return
+                    (new FulfilledPromise())
+                        ->then(function () use ($event, $eventName, $listener) {
+                            return $event->isPropagationStopped()
+                                ? new FulfilledPromise()
+                                : $listener($event, $eventName, $this);
+                        });
             });
         }
 

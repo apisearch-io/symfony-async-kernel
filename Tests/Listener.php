@@ -16,6 +16,7 @@ declare(strict_types=1);
 namespace Symfony\Component\HttpKernel\Tests;
 
 use React\Promise\FulfilledPromise;
+use React\Promise\PromiseInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\GetResponsePromiseEvent;
 use Symfony\Component\HttpKernel\Event\GetResponsePromiseForExceptionEvent;
@@ -83,5 +84,41 @@ class Listener
                 new Response('EXC')
             )
         );
+    }
+
+    /**
+     * Handle get Response 1.
+     *
+     * @param GetResponsePromiseEvent $event
+     *
+     * @return PromiseInterface
+     */
+    public function handleGetResponsePromise1(GetResponsePromiseEvent $event): PromiseInterface
+    {
+        return
+            (new FulfilledPromise())
+                ->then(function () {
+                    $_GET['partial'] .= '1';
+                });
+    }
+
+    /**
+     * Handle get Response 1.
+     *
+     * @param GetResponsePromiseEvent $event
+     */
+    public function handleGetResponsePromise2(GetResponsePromiseEvent $event)
+    {
+        $_GET['partial'] .= '2';
+    }
+
+    /**
+     * Handle get Response 1.
+     *
+     * @param GetResponsePromiseEvent $event
+     */
+    public function handleGetResponsePromise3(GetResponsePromiseEvent $event)
+    {
+        $_GET['partial'] .= '3';
     }
 }

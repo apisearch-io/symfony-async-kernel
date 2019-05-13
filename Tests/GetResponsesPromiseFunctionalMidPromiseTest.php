@@ -21,9 +21,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Class GetResponsesPromiseFunctionalTest.
+ * Class GetResponsesPromiseFunctionalMidPromiseTest.
  */
-class GetResponsesPromiseFunctionalTest extends AsyncKernelFunctionalTest
+class GetResponsesPromiseFunctionalMidPromiseTest extends AsyncKernelFunctionalTest
 {
     /**
      * Decorate configuration.
@@ -41,7 +41,12 @@ class GetResponsesPromiseFunctionalTest extends AsyncKernelFunctionalTest
                 [
                     'name' => 'kernel.event_listener',
                     'event' => 'kernel.async_request',
-                    'method' => 'handleGetResponsePromiseB',
+                    'method' => 'handleGetResponsePromise1',
+                ],
+                [
+                    'name' => 'kernel.event_listener',
+                    'event' => 'kernel.async_request',
+                    'method' => 'handleGetResponsePromise2',
                 ],
                 [
                     'name' => 'kernel.event_listener',
@@ -52,6 +57,16 @@ class GetResponsesPromiseFunctionalTest extends AsyncKernelFunctionalTest
                     'name' => 'kernel.event_listener',
                     'event' => 'kernel.async_request',
                     'method' => 'handleGetResponsePromiseA',
+                ],
+                [
+                    'name' => 'kernel.event_listener',
+                    'event' => 'kernel.async_request',
+                    'method' => 'handleGetResponsePromise2',
+                ],
+                [
+                    'name' => 'kernel.event_listener',
+                    'event' => 'kernel.async_request',
+                    'method' => 'handleGetResponsePromise3',
                 ],
             ],
         ];
@@ -75,15 +90,15 @@ class GetResponsesPromiseFunctionalTest extends AsyncKernelFunctionalTest
             ->handleAsync($request)
             ->then(function (Response $response) {
                 $this->assertEquals(
-                    'B',
+                    'A',
                     $response->getContent()
                 );
 
-                $this->assertEmpty($_GET['partial']);
+                $this->assertEquals('121', $_GET['partial']);
             });
 
         $loop->run();
         Block\await($promise, $loop);
-        $this->assertEmpty($_GET['partial']);
+        $this->assertEquals('121', $_GET['partial']);
     }
 }
