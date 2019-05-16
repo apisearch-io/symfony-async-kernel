@@ -9,7 +9,7 @@ this purposes.
 
 > IMPORTANT !!!  
 > **You can take a look at the first Symfony example on top of this package at
-> [Symfony and ReactPHP Demo](https://symfony-devs.slack.com/messages/CJ65UPJ8J)**
+> [Symfony and ReactPHP Demo](https://github.com/apisearch-io/symfony-react-demo)**
 
 ## POC
 
