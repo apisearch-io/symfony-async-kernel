@@ -1,5 +1,8 @@
 # Symfony Async Kernel Adapter
 
+[![CircleCI](https://circleci.com/gh/apisearch-io/symfony-async-kernel.svg?style=svg)](https://circleci.com/gh/apisearch-io/symfony-async-kernel)
+[![Join the Slack](https://img.shields.io/badge/join%20us-on%20slack-blue.svg)](https://apisearch.slack.com)
+
 This package provides async features to the Symfony Kernel. This implementation
 uses [ReactPHP Promise](https://github.com/reactphp/promise) implementation for
 this purposes.
