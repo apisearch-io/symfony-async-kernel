@@ -1,0 +1,14 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/php:7.1-cli
+
+    working_directory: ~/project
+    steps:
+      - checkout
+      - run:
+          name: Run tests
+          command: |
+            composer install -n --prefer-dist --no-suggest
+            composer test

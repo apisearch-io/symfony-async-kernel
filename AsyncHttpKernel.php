@@ -15,6 +15,7 @@ declare(strict_types=1);
 
 namespace Symfony\Component\HttpKernel;
 
+use Exception;
 use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
 use React\Promise\RejectedPromise;
@@ -27,17 +28,14 @@ use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
 use Symfony\Component\HttpKernel\Controller\ControllerResolverInterface;
 use Symfony\Component\HttpKernel\Event\FilterControllerArgumentsEvent;
 use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
-use Symfony\Component\HttpKernel\Event\FilterResponsePromiseEvent;
+use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Component\HttpKernel\Event\FinishRequestEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
-use Symfony\Component\HttpKernel\Event\GetResponsePromiseEvent;
-use Symfony\Component\HttpKernel\Event\GetResponsePromiseForExceptionEvent;
-use Symfony\Component\HttpKernel\Event\PromiseEvent;
+use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\AsyncEventDispatcherNeededException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Throwable;
 
 /**
  * Class AsyncHttpKernel.
@@ -115,7 +113,7 @@ class AsyncHttpKernel extends HttpKernel
                 $type
             )
             ->then(null,
-                function (Throwable $exception) use ($request, $type, $catch) {
+                function (Exception $exception) use ($request, $type, $catch) {
                     if ($exception instanceof RequestExceptionInterface) {
                         $exception = new BadRequestHttpException($exception->getMessage(), $exception);
                     }
@@ -151,36 +149,19 @@ class AsyncHttpKernel extends HttpKernel
     ): PromiseInterface {
         $dispatcher = $this->dispatcher;
 
-        // request
-        $event = new GetResponseEvent($this, $request, $type);
-        $this->dispatcher->dispatch(KernelEvents::REQUEST, $event);
-
-        if ($event->hasResponse()) {
-            return $this
-                ->filterResponsePromise(new FulfilledPromise($event->getResponse()), $request, $type);
-        }
-
         $this->requestStack->push($request);
-        $event = new GetResponsePromiseEvent($this, $request, $type);
+        $event = new GetResponseEvent($this, $request, $type);
 
         return $dispatcher
-            ->asyncDispatch(AsyncKernelEvents::ASYNC_REQUEST, $event)
-            ->then(function (PromiseEvent $event) use ($request, $type) {
-                if ($event->hasPromise()) {
-                    return $event
-                        ->getPromise()
-                        ->then(function ($response) use ($request, $type) {
-                            return $response instanceof Response
-                                ? $this->filterResponsePromise(
-                                    new FulfilledPromise($response),
-                                    $request,
-                                    $type
-                                )
-                                : $this->callAsyncController($request, $type);
-                        });
-                }
-
-                return $this->callAsyncController($request, $type);
+            ->asyncDispatch(KernelEvents::REQUEST, $event)
+            ->then(function (GetResponseEvent $event) use ($request, $type) {
+                return $event->hasResponse()
+                    ? $this->filterResponsePromise(
+                        $event->getResponse(),
+                        $request,
+                        $type
+                    )
+                    : $this->callAsyncController($request, $type);
             });
     }
 
@@ -212,40 +193,37 @@ class AsyncHttpKernel extends HttpKernel
         $controller = $event->getController();
         $arguments = $event->getArguments();
 
-        /**
-         * Call controller.
-         *
-         * @var PromiseInterface
-         */
-        $promise = $controller(...$arguments);
-
-        return $this->filterResponsePromise($promise, $request, $type);
+        return (new FulfilledPromise())
+            ->then(function () use ($controller, $arguments) {
+                return $controller(...$arguments);
+            })
+            ->then(function ($response) use ($request, $type) {
+                return $this->filterResponsePromise($response, $request, $type);
+            });
     }
 
     /**
      * Filters a response object.
      *
-     * @param PromiseInterface $promise
-     * @param Request          $request
-     * @param int              $type
+     * @param Response $response
+     * @param Request  $request
+     * @param int      $type
      *
      * @return PromiseInterface
      *
      * @throws \RuntimeException if the passed object is not a Response instance
      */
-    private function filterResponsePromise(PromiseInterface $promise, Request $request, int $type)
+    private function filterResponsePromise(Response $response, Request $request, int $type)
     {
-        $event = new FilterResponsePromiseEvent($this, $request, $type, $promise);
+        $event = new FilterResponseEvent($this, $request, $type, $response);
 
         return $this
             ->dispatcher
-            ->asyncDispatch(AsyncKernelEvents::ASYNC_RESPONSE, $event)
-            ->then(function (PromiseEvent $event) use ($request, $type, $promise) {
+            ->asyncDispatch(KernelEvents::RESPONSE, $event)
+            ->then(function (FilterResponseEvent $event) use ($request, $type) {
                 $this->finishRequestPromise($request, $type);
 
-                return $event->hasPromise()
-                    ? $event->getPromise()
-                    : $promise;
+                return $event->getResponse();
             });
     }
 
@@ -269,50 +247,48 @@ class AsyncHttpKernel extends HttpKernel
     /**
      * Handles an exception by trying to convert it to a Response.
      *
-     * @param Throwable $exception
+     * @param Exception $exception
      * @param Request   $request
      * @param int       $type
      *
      * @return PromiseInterface
      *
-     * @throws \Throwable
+     * @throws Exception
      */
     private function handleExceptionPromise(
-        Throwable $exception,
+        Exception $exception,
         Request $request,
         int $type
     ): PromiseInterface {
-        $event = new GetResponsePromiseForExceptionEvent($this, $request, $type, $exception);
-        $promise = $this
+        $event = new GetResponseForExceptionEvent($this, $request, $type, $exception);
+
+        return $this
             ->dispatcher
-            ->asyncDispatch(AsyncKernelEvents::ASYNC_EXCEPTION, $event)
-            ->then(function (GetResponsePromiseForExceptionEvent $event) use ($request, $type) {
+            ->asyncDispatch(KernelEvents::EXCEPTION, $event)
+            ->then(function (GetResponseForExceptionEvent $event) use ($request, $type) {
                 $exception = $event->getException();
-                if (!$event->hasPromise()) {
+                if (!$event->hasResponse()) {
                     $this->finishRequestPromise($request, $type);
 
                     throw $event->getException();
                 } else {
-                    return $event
-                        ->getPromise()
-                        ->then(function (Response $response) use ($request, $type, $event, $exception) {
-                            // the developer asked for a specific status code
-                            if (!$event->isAllowingCustomResponseCode() && !$response->isClientError() && !$response->isServerError() && !$response->isRedirect()) {
-                                // ensure that we actually have an error response
-                                if ($exception instanceof HttpExceptionInterface) {
-                                    // keep the HTTP status code and headers
-                                    $response->setStatusCode($exception->getStatusCode());
-                                    $response->headers->add($exception->getHeaders());
-                                } else {
-                                    $response->setStatusCode(500);
-                                }
-                            }
+                    $response = $event->getResponse();
+                    if (!$event->isAllowingCustomResponseCode() && !$response->isClientError() && !$response->isServerError() && !$response->isRedirect()) {
+                        // ensure that we actually have an error response
+                        if ($exception instanceof HttpExceptionInterface) {
+                            // keep the HTTP status code and headers
+                            $response->setStatusCode($exception->getStatusCode());
+                            $response->headers->add($exception->getHeaders());
+                        } else {
+                            $response->setStatusCode(500);
+                        }
+                    }
 
-                            return $response;
-                        });
+                    return $response;
                 }
+            })
+            ->then(function (Response $response) use ($request, $type) {
+                return $this->filterResponsePromise($response, $request, $type);
             });
-
-        return $this->filterResponsePromise($promise, $request, $type);
     }
 }

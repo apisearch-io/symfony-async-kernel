@@ -40,17 +40,17 @@ class GetResponsesPromiseFunctionalTest extends AsyncKernelFunctionalTest
             'tags' => [
                 [
                     'name' => 'kernel.event_listener',
-                    'event' => 'kernel.async_request',
+                    'event' => 'kernel.request',
                     'method' => 'handleGetResponsePromiseB',
                 ],
                 [
                     'name' => 'kernel.event_listener',
-                    'event' => 'kernel.async_request',
+                    'event' => 'kernel.request',
                     'method' => 'handleGetResponsePromise1',
                 ],
                 [
                     'name' => 'kernel.event_listener',
-                    'event' => 'kernel.async_request',
+                    'event' => 'kernel.request',
                     'method' => 'handleGetResponsePromiseA',
                 ],
             ],

@@ -40,32 +40,32 @@ class GetResponsesPromiseFunctionalMidPromiseTest extends AsyncKernelFunctionalT
             'tags' => [
                 [
                     'name' => 'kernel.event_listener',
-                    'event' => 'kernel.async_request',
+                    'event' => 'kernel.request',
                     'method' => 'handleGetResponsePromise1',
                 ],
                 [
                     'name' => 'kernel.event_listener',
-                    'event' => 'kernel.async_request',
+                    'event' => 'kernel.request',
                     'method' => 'handleGetResponsePromise2',
                 ],
                 [
                     'name' => 'kernel.event_listener',
-                    'event' => 'kernel.async_request',
+                    'event' => 'kernel.request',
                     'method' => 'handleGetResponsePromise1',
                 ],
                 [
                     'name' => 'kernel.event_listener',
-                    'event' => 'kernel.async_request',
+                    'event' => 'kernel.request',
                     'method' => 'handleGetResponsePromiseA',
                 ],
                 [
                     'name' => 'kernel.event_listener',
-                    'event' => 'kernel.async_request',
+                    'event' => 'kernel.request',
                     'method' => 'handleGetResponsePromise2',
                 ],
                 [
                     'name' => 'kernel.event_listener',
-                    'event' => 'kernel.async_request',
+                    'event' => 'kernel.request',
                     'method' => 'handleGetResponsePromise3',
                 ],
             ],

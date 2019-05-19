@@ -18,8 +18,8 @@ namespace Symfony\Component\HttpKernel\Tests;
 use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Event\GetResponsePromiseEvent;
-use Symfony\Component\HttpKernel\Event\GetResponsePromiseForExceptionEvent;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 
 /**
  * Class Listener.
@@ -29,71 +29,74 @@ class Listener
     /**
      * Handle get Response.
      *
-     * @param GetResponsePromiseEvent $event
+     * @param GetResponseEvent $event
+     *
+     * @return PromiseInterface
      */
-    public function handleGetResponsePromiseA(GetResponsePromiseEvent $event)
+    public function handleGetResponsePromiseA(GetResponseEvent $event)
     {
-        $event->setPromise(
-            new FulfilledPromise(
-                new Response('A')
-            )
-        );
+        return (new FulfilledPromise())
+            ->then(function () use ($event) {
+                $event->setResponse(new Response('A'));
+            });
     }
 
     /**
      * Handle get Response.
      *
-     * @param GetResponsePromiseEvent $event
+     * @param GetResponseEvent $event
+     *
+     * @return PromiseInterface
      */
-    public function handleGetResponsePromiseB(GetResponsePromiseEvent $event)
+    public function handleGetResponsePromiseB(GetResponseEvent $event)
     {
-        $event->setPromise(
-            new FulfilledPromise(
-                new Response('B')
-            )
-        );
+        return (new FulfilledPromise())
+            ->then(function () use ($event) {
+                $event->setResponse(new Response('B'));
+            });
     }
 
     /**
      * Handle get Response.
      *
-     * @param GetResponsePromiseEvent $event
+     * @param GetResponseEvent $event
      */
-    public function handleGetResponsePromiseNothing(GetResponsePromiseEvent $event)
+    public function handleGetResponsePromiseNothing(GetResponseEvent $event)
     {
     }
 
     /**
      * Handle get Exception.
      *
-     * @param GetResponsePromiseForExceptionEvent $event
+     * @param GetResponseForExceptionEvent $event
      */
-    public function handleGetExceptionNothing(GetResponsePromiseForExceptionEvent $event)
+    public function handleGetExceptionNothing(GetResponseForExceptionEvent $event)
     {
     }
 
     /**
      * Handle get Exception.
      *
-     * @param GetResponsePromiseForExceptionEvent $event
+     * @param GetResponseForExceptionEvent $event
+     *
+     * @return PromiseInterface
      */
-    public function handleGetExceptionA(GetResponsePromiseForExceptionEvent $event)
+    public function handleGetExceptionA(GetResponseForExceptionEvent $event)
     {
-        $event->setPromise(
-            new FulfilledPromise(
-                new Response('EXC')
-            )
-        );
+        return (new FulfilledPromise())
+            ->then(function () use ($event) {
+                $event->setResponse(new Response('EXC'));
+            });
     }
 
     /**
      * Handle get Response 1.
      *
-     * @param GetResponsePromiseEvent $event
+     * @param GetResponseEvent $event
      *
      * @return PromiseInterface
      */
-    public function handleGetResponsePromise1(GetResponsePromiseEvent $event): PromiseInterface
+    public function handleGetResponsePromise1(GetResponseEvent $event): PromiseInterface
     {
         return
             (new FulfilledPromise())
@@ -105,9 +108,9 @@ class Listener
     /**
      * Handle get Response 1.
      *
-     * @param GetResponsePromiseEvent $event
+     * @param GetResponseEvent $event
      */
-    public function handleGetResponsePromise2(GetResponsePromiseEvent $event)
+    public function handleGetResponsePromise2(GetResponseEvent $event)
     {
         $_GET['partial'] .= '2';
     }
@@ -115,9 +118,9 @@ class Listener
     /**
      * Handle get Response 1.
      *
-     * @param GetResponsePromiseEvent $event
+     * @param GetResponseEvent $event
      */
-    public function handleGetResponsePromise3(GetResponsePromiseEvent $event)
+    public function handleGetResponsePromise3(GetResponseEvent $event)
     {
         $_GET['partial'] .= '3';
     }

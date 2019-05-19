@@ -42,12 +42,12 @@ class AsyncFunctionalTest extends AsyncKernelFunctionalTest
             'tags' => [
                 [
                     'name' => 'kernel.event_listener',
-                    'event' => 'kernel.async_request',
+                    'event' => 'kernel.request',
                     'method' => 'handleGetResponsePromiseNothing',
                 ],
                 [
                     'name' => 'kernel.event_listener',
-                    'event' => 'kernel.async_exception',
+                    'event' => 'kernel.exception',
                     'method' => 'handleGetExceptionNothing',
                 ],
             ],

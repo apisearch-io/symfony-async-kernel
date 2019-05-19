@@ -18,7 +18,7 @@ namespace Symfony\Component\HttpKernel;
 use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
-use Symfony\Component\HttpKernel\Event\PromiseEvent;
+use Symfony\Component\HttpKernel\Event\KernelEvent;
 
 /**
  * Class AsyncEventDispatcher.
@@ -28,14 +28,14 @@ class AsyncEventDispatcher extends EventDispatcher
     /**
      * Dispatch an event asynchronously.
      *
-     * @param string       $eventName
-     * @param PromiseEvent $event
+     * @param string      $eventName
+     * @param KernelEvent $event
      *
      * @return PromiseInterface
      */
     public function asyncDispatch(
         string $eventName,
-        PromiseEvent $event
+        KernelEvent $event
     ) {
         if ($listeners = $this->getListeners($eventName)) {
             return $this->doAsyncDispatch($listeners, $eventName, $event);
@@ -50,16 +50,16 @@ class AsyncEventDispatcher extends EventDispatcher
      * This method can be overridden to add functionality that is executed
      * for each listener.
      *
-     * @param callable[]   $listeners
-     * @param string       $eventName
-     * @param PromiseEvent $event
+     * @param callable[]  $listeners
+     * @param string      $eventName
+     * @param KernelEvent $event
      *
      * @return PromiseInterface
      */
     protected function doAsyncDispatch(
         array $listeners,
         string $eventName,
-        PromiseEvent $event
+        KernelEvent $event
     ) {
         $promise = new FulfilledPromise();
         foreach ($listeners as $listener) {

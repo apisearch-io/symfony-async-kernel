@@ -42,12 +42,12 @@ class GetResponsePromiseFunctionalTest extends AsyncKernelFunctionalTest
             'tags' => [
                 [
                     'name' => 'kernel.event_listener',
-                    'event' => 'kernel.async_request',
+                    'event' => 'kernel.request',
                     'method' => 'handleGetResponsePromiseA',
                 ],
                 [
                     'name' => 'kernel.event_listener',
-                    'event' => 'kernel.async_exception',
+                    'event' => 'kernel.exception',
                     'method' => 'handleGetExceptionA',
                 ],
             ],
@@ -58,6 +58,8 @@ class GetResponsePromiseFunctionalTest extends AsyncKernelFunctionalTest
 
     /**
      * Everything should work as before in the world of sync requests.
+     *
+     * @group lele
      */
     public function testSyncKernel()
     {
