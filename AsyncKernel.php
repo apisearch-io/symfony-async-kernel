@@ -67,20 +67,27 @@ abstract class AsyncKernel extends Kernel implements CompilerPassInterface
      */
     public function process(ContainerBuilder $container)
     {
-        $container
-            ->getDefinition('event_dispatcher')
-            ->setClass(AsyncEventDispatcher::class);
+        if ($container->has('event_dispatcher')) {
+            $container
+                ->getDefinition('event_dispatcher')
+                ->setClass(AsyncEventDispatcher::class);
+        }
 
-        $container
-            ->getDefinition('http_kernel')
-            ->setClass(AsyncHttpKernel::class);
+        if ($container->has('http_kernel')) {
+            $container
+                ->getDefinition('http_kernel')
+                ->setClass(AsyncHttpKernel::class);
+        }
 
         if (!$container->has('reactphp.event_loop')) {
             $loop = new Definition(LoopInterface::class);
             $loop->setSynthetic(true);
+            $loop->setPublic(true);
             $container->setDefinition('reactphp.event_loop', $loop);
         }
 
-        $container->setAlias(LoopInterface::class, 'reactphp.event_loop');
+        if ($container->has('reactphp.event_loop')) {
+            $container->setAlias(LoopInterface::class, 'reactphp.event_loop');
+        }
     }
 }
