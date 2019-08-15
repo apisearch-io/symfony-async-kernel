@@ -65,4 +65,14 @@ class Controller
     {
         return new RejectedPromise(new Exception('E2'));
     }
+
+    /**
+     * Return array.
+     *
+     * @return array
+     */
+    public function getSimpleResult(): array
+    {
+        return ['a', 'b'];
+    }
 }

@@ -31,11 +31,14 @@ use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Component\HttpKernel\Event\FinishRequestEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\GetResponseForControllerResultEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\AsyncEventDispatcherNeededException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\ControllerDoesNotReturnResponseException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Throwable;
 
 /**
  * Class AsyncHttpKernel.
@@ -113,7 +116,7 @@ class AsyncHttpKernel extends HttpKernel
                 $type
             )
             ->then(null,
-                function (Exception $exception) use ($request, $type, $catch) {
+                function (Throwable $exception) use ($request, $type, $catch) {
                     if ($exception instanceof RequestExceptionInterface) {
                         $exception = new BadRequestHttpException($exception->getMessage(), $exception);
                     }
@@ -197,8 +200,50 @@ class AsyncHttpKernel extends HttpKernel
             ->then(function () use ($controller, $arguments) {
                 return $controller(...$arguments);
             })
+            ->then(function ($response) use ($request, $type, $controller) {
+                if (!$response instanceof Response) {
+                    return $this->callAsyncView($request, $response, $controller, $type);
+                }
+
+                return $response;
+            })
             ->then(function ($response) use ($request, $type) {
                 return $this->filterResponsePromise($response, $request, $type);
+            });
+    }
+
+    /**
+     * Call async view.
+     *
+     * @param Request  $request
+     * @param mixed    $response
+     * @param callable $controller
+     * @param int      $type
+     *
+     * @return PromiseInterface
+     */
+    private function callAsyncView(
+        Request $request,
+        $response,
+        callable $controller,
+        int $type
+    ): PromiseInterface {
+        return (new FulfilledPromise())
+            ->then(function () use ($request, $response, $controller, $type) {
+                $event = new GetResponseForControllerResultEvent($this, $request, $type, $response);
+                $this->dispatcher->dispatch(KernelEvents::VIEW, $event);
+
+                if ($event->hasResponse()) {
+                    return $event->getResponse();
+                } else {
+                    $msg = sprintf('The controller must return a "Symfony\Component\HttpFoundation\Response" object but it returned %s.', $this->varToString($response));
+                    // the user may have forgotten to return something
+                    if (null === $response) {
+                        $msg .= ' Did you forget to add a return statement somewhere in your controller?';
+                    }
+
+                    throw new ControllerDoesNotReturnResponseException($msg, $controller, __FILE__, __LINE__ - 17);
+                }
             });
     }
 
@@ -247,7 +292,7 @@ class AsyncHttpKernel extends HttpKernel
     /**
      * Handles an exception by trying to convert it to a Response.
      *
-     * @param Exception $exception
+     * @param Throwable $exception
      * @param Request   $request
      * @param int       $type
      *
@@ -256,10 +301,17 @@ class AsyncHttpKernel extends HttpKernel
      * @throws Exception
      */
     private function handleExceptionPromise(
-        Exception $exception,
+        Throwable $exception,
         Request $request,
         int $type
     ): PromiseInterface {
+        if (!$exception instanceof Exception) {
+            $exception = new Exception(
+                $exception->getMessage(),
+                $exception->getCode()
+            );
+        }
+
         $event = new GetResponseForExceptionEvent($this, $request, $type, $exception);
 
         return $this
@@ -290,5 +342,43 @@ class AsyncHttpKernel extends HttpKernel
             ->then(function (Response $response) use ($request, $type) {
                 return $this->filterResponsePromise($response, $request, $type);
             });
+    }
+
+    /**
+     * Returns a human-readable string for the specified variable.
+     */
+    private function varToString($var): string
+    {
+        if (\is_object($var)) {
+            return sprintf('an object of type %s', \get_class($var));
+        }
+        if (\is_array($var)) {
+            $a = [];
+            foreach ($var as $k => $v) {
+                $a[] = sprintf('%s => ...', $k);
+            }
+
+            return sprintf('an array ([%s])', mb_substr(implode(', ', $a), 0, 255));
+        }
+        if (\is_resource($var)) {
+            return sprintf('a resource (%s)', get_resource_type($var));
+        }
+        if (null === $var) {
+            return 'null';
+        }
+        if (false === $var) {
+            return 'a boolean value (false)';
+        }
+        if (true === $var) {
+            return 'a boolean value (true)';
+        }
+        if (\is_string($var)) {
+            return sprintf('a string ("%s%s")', mb_substr($var, 0, 255), mb_strlen($var) > 255 ? '...' : '');
+        }
+        if (is_numeric($var)) {
+            return sprintf('a number (%s)', (string) $var);
+        }
+
+        return (string) $var;
     }
 }
