@@ -16,16 +16,14 @@ declare(strict_types=1);
 namespace Symfony\Component\HttpKernel\Tests;
 
 use Clue\React\Block;
-use Exception;
 use React\EventLoop\StreamSelectLoop;
-use React\Promise;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Class GetResponsePromiseFunctionalTest.
+ * Class TwigTest.
  */
-class GetResponsePromiseFunctionalTest extends AsyncKernelFunctionalTest
+class TwigTest extends AsyncKernelFunctionalTest
 {
     /**
      * Decorate configuration.
@@ -42,13 +40,8 @@ class GetResponsePromiseFunctionalTest extends AsyncKernelFunctionalTest
             'tags' => [
                 [
                     'name' => 'kernel.event_listener',
-                    'event' => 'kernel.request',
-                    'method' => 'handleGetResponsePromiseA',
-                ],
-                [
-                    'name' => 'kernel.event_listener',
-                    'event' => 'kernel.exception',
-                    'method' => 'handleGetExceptionA',
+                    'event' => 'kernel.view',
+                    'method' => 'handleView',
                 ],
             ],
         ];
@@ -58,48 +51,26 @@ class GetResponsePromiseFunctionalTest extends AsyncKernelFunctionalTest
 
     /**
      * Everything should work as before in the world of sync requests.
-     *
-     * @group lele
      */
     public function testSyncKernel()
     {
         $loop = new StreamSelectLoop();
+        $request = new Request([], [], [], [], [], [
+            'REQUEST_METHOD' => 'GET',
+            'REQUEST_URI' => '/simple-result',
+        ]);
 
-        $promise1 = self::$kernel
-            ->handleAsync(new Request([], [], [], [], [], [
-                'REQUEST_METHOD' => 'GET',
-                'REQUEST_URI' => '/promise',
-            ]))
+        $_GET['partial'] = '';
+        $promise = self::$kernel
+            ->handleAsync($request)
             ->then(function (Response $response) {
                 $this->assertEquals(
-                    'A',
+                    json_encode(['a', 'b']),
                     $response->getContent()
                 );
             });
 
-        $promise2 = self::$kernel
-            ->handleAsync(new Request([], [], [], [], [], [
-                'REQUEST_METHOD' => 'GET',
-                'REQUEST_URI' => '/promise-exception',
-            ]))
-            ->then(null, function (Exception $exception) {
-                $this->assertEquals(
-                    'EXC',
-                    $exception->getMessage()
-                );
-
-                $this->assertEquals(
-                    404,
-                    $exception->getCode()
-                );
-            });
-
         $loop->run();
-        Block\await(
-            Promise\all([
-                $promise1,
-                $promise2,
-            ]), $loop
-        );
+        Block\await($promise, $loop);
     }
 }

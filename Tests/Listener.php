@@ -17,8 +17,10 @@ namespace Symfony\Component\HttpKernel\Tests;
 
 use React\Promise\FulfilledPromise;
 use React\Promise\PromiseInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\GetResponseForControllerResultEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 
 /**
@@ -85,7 +87,7 @@ class Listener
     {
         return (new FulfilledPromise())
             ->then(function () use ($event) {
-                $event->setResponse(new Response('EXC'));
+                $event->setResponse(new Response('EXC', 404));
             });
     }
 
@@ -123,5 +125,15 @@ class Listener
     public function handleGetResponsePromise3(GetResponseEvent $event)
     {
         $_GET['partial'] .= '3';
+    }
+
+    /**
+     * Handle view.
+     *
+     * @param GetResponseForControllerResultEvent $event
+     */
+    public function handleView(GetResponseForControllerResultEvent $event)
+    {
+        $event->setResponse(new JsonResponse($event->getControllerResult()));
     }
 }
